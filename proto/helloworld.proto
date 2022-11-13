@@ -8,10 +8,15 @@ service Greeter {
   
 // The request message containing the user's name.
 message HelloRequest {
-    optional string name = 1;
+    string clientId = 1;
+    string requestId = 2;
+    string timeAtClient = 3;
+    string pastWindowData = 4;
 }
 
 // The response message containing the greetings
 message HelloReply {
-    optional string message = 1;
+    string requestId = 1;
+    string serverTime = 2;
+    string requestTime = 3;
 }
