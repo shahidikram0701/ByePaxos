@@ -3,6 +3,7 @@ import socket
 import uuid
 import pickle
 import datetime
+import os
 
 import grpc
 from proto import helloworld_pb2
@@ -57,14 +58,27 @@ def run(port):
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
     print("Will try to greet world ...")
-    with grpc.insecure_channel('localhost:' + port) as channel:
+    with grpc.insecure_channel('128.110.217.82:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
-        i = 1
-        while i < 20:
-            print(sayHello(stub))
-            i += 1
+        sayHello(stub)
+    
+    with grpc.insecure_channel('128.105.145.255:' + port) as channel:
+        stub = helloworld_pb2_grpc.GreeterStub(channel)
+        sayHello(stub)
+    
+    with grpc.insecure_channel('130.127.133.136:' + port) as channel:
+        stub = helloworld_pb2_grpc.GreeterStub(channel)
+        sayHello(stub)
+
+    with grpc.insecure_channel('155.98.38.24:' + port) as channel:
+        stub = helloworld_pb2_grpc.GreeterStub(channel)
+        sayHello(stub) 
 
 if __name__ == '__main__':
+    path = "logs/"
+    isExist = os.path.exists(path)
+    if not isExist:
+        os.makedirs(path)
     port = "50059"
     logging.basicConfig(
         filename="logs/client.log",
@@ -78,5 +92,7 @@ if __name__ == '__main__':
     s.connect(("8.8.8.8", 80))
     selfId = s.getsockname()[0] + ":" + port
     s.close()
-
-    run(port)
+    i = 0
+    while(i < 10):
+        run(port)
+        i += 1

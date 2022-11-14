@@ -7,7 +7,7 @@ import grpc
 from proto import helloworld_pb2
 from proto import helloworld_pb2_grpc
 from datetime import datetime
-
+import os
 
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
@@ -40,11 +40,11 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
             "[ TimeAtClient ]" + 
             timeAtClient
         )
-        print("PastWindowData", pickle.loads(pastWindowData.encode()))
+        # print("PastWindowData", pickle.loads(pastWindowData.encode()))
         logging.info(
             "[ " + requestId + " ]" + 
             "[ PastWindowData ]" + 
-            pastWindowData
+            pickle.loads(pastWindowData.encode())
         )
         with self.lock1.read:
             if clientId in self.clientPastRequests:
@@ -88,6 +88,11 @@ def serve():
 
 
 if __name__ == '__main__':
+    path = "logs/"
+    isExist = os.path.exists(path)
+    if not isExist:
+        os.makedirs(path)
+    
     logging.basicConfig(
         filename="logs/server.log",
         filemode='a',
