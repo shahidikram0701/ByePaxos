@@ -4,6 +4,7 @@ import uuid
 import pickle
 import datetime
 import os
+import time
 
 import grpc
 from proto import helloworld_pb2
@@ -48,7 +49,7 @@ def sayHello(stub):
             logging.info(
                 "[ " + requestId + " ]" +
                 "[ DeletingPastEntry ]" + 
-                str(pickle.dumps(pastWindowData.pop(0), 0))
+                str(pastWindowData.pop(0))
             )
     
     return("RTT completed successfully for request id: " + requestId)
@@ -57,22 +58,34 @@ def run(port):
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    print("Will try to greet world ...")
+    print("Seding request to 128.110.217.82")
     with grpc.insecure_channel('128.110.217.82:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub)
     
+    print("Seding request to 128.105.145.255")
     with grpc.insecure_channel('128.105.145.255:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub)
     
+    print("Seding request to 130.127.133.136")
     with grpc.insecure_channel('130.127.133.136:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub)
 
+    print("Seding request to 155.98.38.24")
     with grpc.insecure_channel('155.98.38.24:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub) 
+
+
+    # For local dev
+
+    # print("Seding request to 127.0.0.1")
+    # with grpc.insecure_channel('127.0.0.1:' + port) as channel:
+    #     stub = helloworld_pb2_grpc.GreeterStub(channel)
+    #     sayHello(stub)
+
 
 if __name__ == '__main__':
     path = "logs/"
@@ -90,9 +103,8 @@ if __name__ == '__main__':
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
-    selfId = s.getsockname()[0] + ":" + port
+    selfId = s.getsockname()[0]
     s.close()
-    i = 0
-    while(i < 10):
+    t_end = time.time() + 5
+    while time.time() < t_end:
         run(port)
-        i += 1

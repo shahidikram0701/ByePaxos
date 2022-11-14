@@ -23,6 +23,8 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         timeAtClient = request.timeAtClient
         pastWindowData = request.pastWindowData
 
+        print("Received request from " + clientId + " with requestId: " + requestId)
+
         serverTime = datetime.now()
 
         logging.info(
