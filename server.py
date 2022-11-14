@@ -44,7 +44,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         logging.info(
             "[ " + requestId + " ]" + 
             "[ PastWindowData ]" + 
-            pickle.loads(pastWindowData.encode())
+            str(pickle.loads(pastWindowData.encode()))
         )
         with self.lock1.read:
             if clientId in self.clientPastRequests:
