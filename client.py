@@ -85,23 +85,23 @@ def run(port, seq):
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
 
-    print("Seding request to 128.110.217.82")
-    with grpc.insecure_channel('128.110.217.82:' + port) as channel:
+    print("Seding request to 128.110.219.70")
+    with grpc.insecure_channel('128.110.219.70:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub, seq)
     
-    print("Seding request to 128.105.145.255")
-    with grpc.insecure_channel('128.105.145.255:' + port) as channel:
+    print("Seding request to 128.105.144.137")
+    with grpc.insecure_channel('128.105.144.137:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub, seq)
     
-    print("Seding request to 130.127.133.136")
-    with grpc.insecure_channel('130.127.133.136:' + port) as channel:
+    print("Seding request to 130.127.134.5")
+    with grpc.insecure_channel('130.127.134.5:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub, seq)
 
-    print("Seding request to 155.98.38.24")
-    with grpc.insecure_channel('155.98.38.24:' + port) as channel:
+    print("Seding request to 155.98.38.21")
+    with grpc.insecure_channel('155.98.38.21:' + port) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         sayHello(stub, seq) 
 
