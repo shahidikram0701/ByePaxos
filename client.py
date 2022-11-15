@@ -132,7 +132,7 @@ if __name__ == '__main__':
     s.connect(("8.8.8.8", 80))
     selfId = s.getsockname()[0]
     s.close()
-    t_end = time.time() + 1
+    t_end = time.time() + 60 * 60
     seq = 0
     while time.time() < t_end:
         run(port, seq)
