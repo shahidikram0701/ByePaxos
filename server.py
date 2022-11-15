@@ -22,11 +22,48 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         requestId = request.requestId
         timeAtClient = request.timeAtClient
         pastWindowData = request.pastWindowData
+        seqNum = request.sequenceNumber
 
-        print("Received request from " + clientId + " with requestId: " + requestId)
+        print("[ " + seqNum + " ]" + "Received request from " + clientId + " with requestId: " + requestId)
 
         serverTime = datetime.now()
 
+        sequenceNumberTuple = "(SequenceNumber, " + seqNum + ")"  
+        requestArrivalTimeTuple = "(RequestArrivalTime, " + serverTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        clientIdTuple = "(ClientId, " + clientId + ")"
+        timeAtClientTuple = "(TimeAtClient, " + timeAtClient + ")"
+        pastWindowDataTuple = "(PastWindowData, " + str(pickle.loads(pastWindowData.encode())) + ")"
+        timeSinceClientsLastReqTuple = "(TimeSinceThisClientsLastRequest, "
+        with self.lock1.read:
+            if clientId in self.clientPastRequests:
+                timeSinceClientsLastReqTuple += str(serverTime - self.clientPastRequests[clientId]) + ")"
+            else:
+                timeSinceClientsLastReqTuple += "None)"
+
+        lastReqByTuple = "(LastRequestBy, "
+        timeSinceLastReqTuple = "(TimeSincesLastRequest, "
+        with self.lock2.read:
+            if self.lastRequestArrivalTime:
+                lastReqByTuple += self.lastRequestArrivalTime["clientId"] + ")"
+                timeSinceLastReqTuple += str(serverTime - self.lastRequestArrivalTime["time"]) + ")"
+            else:
+                lastReqByTuple += "None)"
+                timeSinceLastReqTuple += "None)"
+                
+        requestIdTuple = "(RequestId, " + requestId + ")"
+        
+        logging.info("[RequestLog]"
+            + requestIdTuple + "; " 
+            + sequenceNumberTuple + "; " 
+            + requestArrivalTimeTuple + "; "
+            + clientIdTuple + "; "
+            + timeAtClientTuple + "; "
+            + pastWindowDataTuple + "; "
+            + timeSinceClientsLastReqTuple + "; "
+            + lastReqByTuple + "; "
+            + timeSinceLastReqTuple + ";"
+        )
+        '''
         logging.info(
             "[ " + requestId + " ]" + 
             "[ RequestArrivalTime ]" + 
@@ -55,9 +92,10 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
                     "[ TimeSinceThisClientsLastRequest ]" +
                     str(serverTime - self.clientPastRequests[clientId])
                 )
+        '''
         with self.lock1.write:
             self.clientPastRequests[clientId] = serverTime
-
+        '''
         with self.lock2.read:
             if self.lastRequestArrivalTime:
                 logging.info(
@@ -70,7 +108,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
                     "[ TimeSincesLastRequest ]" +
                     str(serverTime - self.lastRequestArrivalTime["time"])
                 )
-
+        '''
         with self.lock2.write:
             self.lastRequestArrivalTime["clientId"] = clientId
             self.lastRequestArrivalTime["time"] = serverTime
