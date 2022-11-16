@@ -98,19 +98,19 @@ def run(port, seq):
 
     replicas = ["128.110.219.70", "128.105.144.137", "130.127.134.5", "155.98.38.21"]
 
-    # for replica in replicas:
-    #     print("Seding request to " + replica)
-    #     with grpc.insecure_channel(replica + ":" + port) as channel:
-    #         stub = helloworld_pb2_grpc.GreeterStub(channel)
-    #         sayHello(stub, seq, replica)
+    for replica in replicas:
+        print("Seding request to " + replica)
+        with grpc.insecure_channel(replica + ":" + port) as channel:
+            stub = helloworld_pb2_grpc.GreeterStub(channel)
+            sayHello(stub, seq, replica)
 
 
     # For local dev
 
-    print("Seding request to 127.0.0.1")
-    with grpc.insecure_channel('127.0.0.1:' + port) as channel:
-        stub = helloworld_pb2_grpc.GreeterStub(channel)
-        sayHello(stub, seq, "127.0.0.1")
+    # print("Seding request to 127.0.0.1")
+    # with grpc.insecure_channel('127.0.0.1:' + port) as channel:
+    #     stub = helloworld_pb2_grpc.GreeterStub(channel)
+    #     sayHello(stub, seq, "127.0.0.1")
 
 
 if __name__ == '__main__':
