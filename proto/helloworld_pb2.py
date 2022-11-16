@@ -13,17 +13,17 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10helloworld.proto\"y\n\x0cHelloRequest\x12\x10\n\x08\x63lientId\x18\x01 \x01(\t\x12\x11\n\trequestId\x18\x02 \x01(\t\x12\x14\n\x0ctimeAtClient\x18\x03 \x01(\t\x12\x16\n\x0epastWindowData\x18\x04 \x01(\t\x12\x16\n\x0esequenceNumber\x18\x05 \x01(\t\"H\n\nHelloReply\x12\x11\n\trequestId\x18\x01 \x01(\t\x12\x12\n\nserverTime\x18\x02 \x01(\t\x12\x13\n\x0brequestTime\x18\x03 \x01(\t23\n\x07Greeter\x12(\n\x08SayHello\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10helloworld.proto\"\x8a\x01\n\x0cHelloRequest\x12\x10\n\x08\x63lientId\x18\x01 \x01(\t\x12\x11\n\trequestId\x18\x02 \x01(\t\x12\x14\n\x0ctimeAtClient\x18\x03 \x01(\t\x12\x16\n\x0epastWindowData\x18\x04 \x01(\t\x12\x16\n\x0esequenceNumber\x18\x05 \x01(\t\x12\x0f\n\x07history\x18\x06 \x01(\t\"H\n\nHelloReply\x12\x11\n\trequestId\x18\x01 \x01(\t\x12\x12\n\nserverTime\x18\x02 \x01(\t\x12\x13\n\x0brequestTime\x18\x03 \x01(\t23\n\x07Greeter\x12(\n\x08SayHello\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'helloworld_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _HELLOREQUEST._serialized_start=20
-  _HELLOREQUEST._serialized_end=141
-  _HELLOREPLY._serialized_start=143
-  _HELLOREPLY._serialized_end=215
-  _GREETER._serialized_start=217
-  _GREETER._serialized_end=268
+  _HELLOREQUEST._serialized_start=21
+  _HELLOREQUEST._serialized_end=159
+  _HELLOREPLY._serialized_start=161
+  _HELLOREPLY._serialized_end=233
+  _GREETER._serialized_start=235
+  _GREETER._serialized_end=286
 # @@protoc_insertion_point(module_scope)

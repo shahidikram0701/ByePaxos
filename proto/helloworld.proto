@@ -13,6 +13,7 @@ message HelloRequest {
     string timeAtClient = 3;
     string pastWindowData = 4;
     string sequenceNumber = 5;
+    string history = 6;
 }
 
 // The response message containing the greetings

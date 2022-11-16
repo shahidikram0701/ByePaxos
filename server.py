@@ -23,6 +23,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         timeAtClient = request.timeAtClient
         pastWindowData = request.pastWindowData
         seqNum = request.sequenceNumber
+        history = request.history
 
         print("[ " + seqNum + " ]" + "Received request from " + clientId + " with requestId: " + requestId)
 
@@ -33,6 +34,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         clientIdTuple = "(ClientId, " + clientId + ")"
         timeAtClientTuple = "(TimeAtClient, " + timeAtClient + ")"
         pastWindowDataTuple = "(PastWindowData, " + str(pickle.loads(pastWindowData.encode())) + ")"
+        historyTuple = "(History, " + str(pickle.loads(history.encode())) + ")"
         timeSinceClientsLastReqTuple = "(TimeSinceThisClientsLastRequest, "
         with self.lock1.read:
             if clientId in self.clientPastRequests:
@@ -41,7 +43,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
                 timeSinceClientsLastReqTuple += "None)"
 
         lastReqByTuple = "(LastRequestBy, "
-        timeSinceLastReqTuple = "(TimeSincesLastRequest, "
+        timeSinceLastReqTuple = "(TimeSinceLastRequest, "
         with self.lock2.read:
             if self.lastRequestArrivalTime:
                 lastReqByTuple += self.lastRequestArrivalTime["clientId"] + ")"
@@ -61,7 +63,8 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
             + pastWindowDataTuple + "; "
             + timeSinceClientsLastReqTuple + "; "
             + lastReqByTuple + "; "
-            + timeSinceLastReqTuple + ";"
+            + timeSinceLastReqTuple + "; "
+            + historyTuple + ";"
         )
         '''
         logging.info(
