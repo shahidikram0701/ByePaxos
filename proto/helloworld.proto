@@ -4,6 +4,7 @@ syntax = "proto3";
 service Greeter {
     // Sends a greeting
     rpc SayHello (HelloRequest) returns (HelloReply) {}
+    rpc SayHelloReplica (HelloRequestReplica) returns (HelloReplyReplica) {}
   }
   
 // The request message containing the user's name.
@@ -21,4 +22,17 @@ message HelloReply {
     string requestId = 1;
     string serverTime = 2;
     string requestTime = 3;
+}
+
+message HelloRequestReplica {
+    string replicaId = 1;
+    string requestId = 2;
+    string history = 3;
+    string pastWindowData = 4;
+    string timeAtSender = 5;
+}
+
+message HelloReplyReplica {
+    string requestId = 1;
+    string timeAtReceiver = 2;
 }
