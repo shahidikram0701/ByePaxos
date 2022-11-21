@@ -8,6 +8,7 @@ from proto import helloworld_pb2
 from proto import helloworld_pb2_grpc
 from datetime import datetime
 import os
+import psutil
 
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
@@ -23,6 +24,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         timeAtClient = request.timeAtClient
         pastWindowData = request.pastWindowData
         seqNum = request.sequenceNumber
+        history = request.history
 
         print("[ " + seqNum + " ]" + "Received request from " + clientId + " with requestId: " + requestId)
 
@@ -33,6 +35,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         clientIdTuple = "(ClientId, " + clientId + ")"
         timeAtClientTuple = "(TimeAtClient, " + timeAtClient + ")"
         pastWindowDataTuple = "(PastWindowData, " + str(pickle.loads(pastWindowData.encode())) + ")"
+        historyTuple = "(History, " + str(pickle.loads(history.encode())) + ")"
         timeSinceClientsLastReqTuple = "(TimeSinceThisClientsLastRequest, "
         with self.lock1.read:
             if clientId in self.clientPastRequests:
@@ -41,7 +44,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
                 timeSinceClientsLastReqTuple += "None)"
 
         lastReqByTuple = "(LastRequestBy, "
-        timeSinceLastReqTuple = "(TimeSincesLastRequest, "
+        timeSinceLastReqTuple = "(TimeSinceLastRequest, "
         with self.lock2.read:
             if self.lastRequestArrivalTime:
                 lastReqByTuple += self.lastRequestArrivalTime["clientId"] + ")"
@@ -52,6 +55,14 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
                 
         requestIdTuple = "(RequestId, " + requestId + ")"
         
+        ''' System conditions '''
+        cpu_percentage = psutil.cpu_percent()
+        memory_conditions = dict(psutil.virtual_memory()._asdict())
+
+        cpu_util_tuple = "(CPUUtil, " + str(cpu_percentage) + ")"
+        memory_conditions_tuple = "(Memory, " + str(memory_conditions) + ")"
+
+
         logging.info("[RequestLog]"
             + requestIdTuple + "; " 
             + sequenceNumberTuple + "; " 
@@ -61,7 +72,10 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
             + pastWindowDataTuple + "; "
             + timeSinceClientsLastReqTuple + "; "
             + lastReqByTuple + "; "
-            + timeSinceLastReqTuple + ";"
+            + timeSinceLastReqTuple + "; "
+            + historyTuple + "; "
+            + cpu_util_tuple + "; "
+            + memory_conditions_tuple + "; "
         )
         '''
         logging.info(
@@ -115,6 +129,44 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         
         return helloworld_pb2.HelloReply(requestId = requestId, serverTime = serverTime.strftime('%Y-%m-%d %H:%M:%S'), requestTime = timeAtClient)
 
+    def SayHelloReplica(self, request, context):
+        requestId = request.requestId
+        history = request.history
+        pastWindowData = request.pastWindowData
+        timeAtSender = request.timeAtSender
+        senderId = request.replicaId
+
+        serverTime = datetime.now()
+
+        requestIdTuple = "(RequestId, " + requestId + ")"
+        requestArrivalTimeTuple = "(RequestArrivalTime, " + serverTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        historyTuple = "(History, " + str(pickle.loads(history.encode())) + ")"
+        pastWindowDataTuple = "(PastWindowData, " + str(pickle.loads(pastWindowData.encode())) + ")"
+        timeAtSenderTuple = "(TimeAtSenderTuple, " + timeAtSender + ")"
+        senderIdTuple = "(SenderId, " + str(senderId) + ")"
+
+        ''' System conditions '''
+        cpu_percentage = psutil.cpu_percent()
+        memory_conditions = dict(psutil.virtual_memory()._asdict())
+
+        cpu_util_tuple = "(CPUUtil, " + str(cpu_percentage) + ")"
+        memory_conditions_tuple = "(Memory, " + str(memory_conditions) + ")"
+
+        logging.info("[ReplicaRequestLog]"
+            + str(requestIdTuple) + "; "
+            + str(senderIdTuple) + "; " 
+            + str(requestArrivalTimeTuple) + "; "
+            + str(pastWindowDataTuple) + "; "
+            + str(historyTuple) + "; "
+            + str(timeAtSenderTuple) + "; "
+            + str(cpu_util_tuple) + "; "
+            + str(memory_conditions_tuple) + "; "
+        )
+
+        return helloworld_pb2.HelloReplyReplica(
+            requestId = requestId,
+            timeAtReceiver = serverTime.strftime('%Y-%m-%d %H:%M:%S')
+        )
 
 def serve():
     port = '50059'

@@ -20,10 +20,9 @@ def sayHello(stub, seq, replica):
     global selfId
     global pastWindowData
 
-    timeAtClient = datetime.datetime.now()
+    timeAtSender = datetime.datetime.now()
     requestId = str(uuid.uuid1())
 
-    seqNum = str(seq)
 
     ''' System conditions '''
     cpu_percentage = psutil.cpu_percent()
@@ -32,13 +31,12 @@ def sayHello(stub, seq, replica):
     cpu_util_tuple = "(CPUUtil, " + str(cpu_percentage) + ")"
     memory_conditions_tuple = "(Memory, " + str(memory_conditions) + ")"
 
-    response = stub.SayHello(
-        helloworld_pb2.HelloRequest(
-            clientId = selfId, 
-            requestId = requestId, 
-            timeAtClient = timeAtClient.strftime('%Y-%m-%d %H:%M:%S'), 
+    response = stub.SayHelloReplica(
+        helloworld_pb2.HelloRequestReplica(
+            replicaId = selfId, 
+            requestId = requestId,
+            timeAtSender = timeAtSender.strftime('%Y-%m-%d %H:%M:%S'),
             pastWindowData = pickle.dumps(pastWindowData, 0).decode(),
-            sequenceNumber = seqNum,
             history = pickle.dumps(history, 0).decode()
         )
     )
@@ -54,7 +52,7 @@ def sayHello(stub, seq, replica):
         '''
         responseReceivedTime = datetime.datetime.now()
 
-        rtt = str(responseReceivedTime - timeAtClient)
+        rtt = str(responseReceivedTime - timeAtSender)
         '''
         logging.info(
             "[ " + requestId + " ]" +
@@ -73,17 +71,17 @@ def sayHello(stub, seq, replica):
             history[replica].pop(0)
         
         
-        serverTimeTuple = "(ServerTime, " + response.serverTime + ")"
+        serverTimeTuple = "(ServerTime, " + response.timeAtReceiver + ")"
+        requestToTuple = "(ReceieverReplica, " + replica + ")"
         requestIdTuple = "(RequestId, " + requestId + ")"
         rttTuple = "(RTT, " + rtt + ")"
-        requestSentAtTuple = "(RequestSentAt, " + timeAtClient.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        requestSentAtTuple = "(RequestSentAt, " + timeAtSender.strftime('%Y-%m-%d %H:%M:%S') + ")"
         responseReceivedTimeTuple = "(ResponseReceivedAt, " + responseReceivedTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
-        sequenceNumberTuple = "(SequenceNumber, " + seqNum + ")"  
 
         logging.info(
             "[ResponseLog]"
             + requestIdTuple + "; "
-            + sequenceNumberTuple + "; "
+            + requestToTuple + "; "
             + serverTimeTuple + "; "
             + requestSentAtTuple + "; "
             + responseReceivedTimeTuple + "; "
@@ -109,10 +107,11 @@ def run(port, seq):
     replicas = ["128.110.219.70", "128.105.144.137", "130.127.134.5", "155.98.38.21"]
 
     for replica in replicas:
-        print("Seding request to " + replica)
-        with grpc.insecure_channel(replica + ":" + port) as channel:
-            stub = helloworld_pb2_grpc.GreeterStub(channel)
-            sayHello(stub, seq, replica)
+        if selfId != replica:
+            print("Seding request to " + replica)
+            with grpc.insecure_channel(replica + ":" + port) as channel:
+                stub = helloworld_pb2_grpc.GreeterStub(channel)
+                sayHello(stub, seq, replica)
 
 
     # For local dev
@@ -130,7 +129,7 @@ if __name__ == '__main__':
         os.makedirs(path)
     port = "50059"
     logging.basicConfig(
-        filename="logs/client.log",
+        filename="logs/inter-replica.log",
         filemode='a',
         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
         datefmt='%H:%M:%S',

@@ -20,6 +20,11 @@ class GreeterStub(object):
                 request_serializer=helloworld__pb2.HelloRequest.SerializeToString,
                 response_deserializer=helloworld__pb2.HelloReply.FromString,
                 )
+        self.SayHelloReplica = channel.unary_unary(
+                '/Greeter/SayHelloReplica',
+                request_serializer=helloworld__pb2.HelloRequestReplica.SerializeToString,
+                response_deserializer=helloworld__pb2.HelloReplyReplica.FromString,
+                )
 
 
 class GreeterServicer(object):
@@ -33,6 +38,12 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SayHelloReplica(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -40,6 +51,11 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.SayHello,
                     request_deserializer=helloworld__pb2.HelloRequest.FromString,
                     response_serializer=helloworld__pb2.HelloReply.SerializeToString,
+            ),
+            'SayHelloReplica': grpc.unary_unary_rpc_method_handler(
+                    servicer.SayHelloReplica,
+                    request_deserializer=helloworld__pb2.HelloRequestReplica.FromString,
+                    response_serializer=helloworld__pb2.HelloReplyReplica.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -66,5 +82,22 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/SayHello',
             helloworld__pb2.HelloRequest.SerializeToString,
             helloworld__pb2.HelloReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SayHelloReplica(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Greeter/SayHelloReplica',
+            helloworld__pb2.HelloRequestReplica.SerializeToString,
+            helloworld__pb2.HelloReplyReplica.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
