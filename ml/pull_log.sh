@@ -2,7 +2,7 @@ export CLOUDLAB_USER=rickyhh2
 export PRIVATE_KEY_PATH=../../../final_temp
 export OUTPUT_DIR=./data
 
-mkdir -p data
+mkdir -p $OUTPUT_DIR
 
 declare -A pairs=( [pc446.emulab.net]=client-pc446 [pc497.emulab.net]=client-pc497 [apt031.apt.emulab.net]=client-apt031)
 for i in "${!pairs[@]}"; do
