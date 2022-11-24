@@ -2,6 +2,7 @@ from concurrent import futures
 import logging
 from rwmutex import RWLock
 import pickle
+import sys
 
 import grpc
 from proto import helloworld_pb2
@@ -169,7 +170,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         )
 
 def serve():
-    port = '50059'
+    port = '50060'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port('[::]:' + port)
@@ -184,9 +185,12 @@ if __name__ == '__main__':
     isExist = os.path.exists(path)
     if not isExist:
         os.makedirs(path)
+
+    logfilename = sys.argv[1]
+    logfilepath = "logs/" + logfilename
     
     logging.basicConfig(
-        filename="logs/server.log",
+        filename=logfilepath,
         filemode='a',
         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
         datefmt='%H:%M:%S',
