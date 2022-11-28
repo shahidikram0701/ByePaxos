@@ -36,7 +36,7 @@ def sayHello(stub, seq, replica):
         helloworld_pb2.HelloRequestReplica(
             replicaId = selfId, 
             requestId = requestId,
-            timeAtSender = timeAtSender.strftime('%Y-%m-%d %H:%M:%S'),
+            timeAtSender = timeAtSender.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
             pastWindowData = pickle.dumps(pastWindowData, 0).decode(),
             history = pickle.dumps(history, 0).decode()
         )
@@ -76,8 +76,8 @@ def sayHello(stub, seq, replica):
         requestToTuple = "(ReceieverReplica, " + replica + ")"
         requestIdTuple = "(RequestId, " + requestId + ")"
         rttTuple = "(RTT, " + rtt + ")"
-        requestSentAtTuple = "(RequestSentAt, " + timeAtSender.strftime('%Y-%m-%d %H:%M:%S') + ")"
-        responseReceivedTimeTuple = "(ResponseReceivedAt, " + responseReceivedTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        requestSentAtTuple = "(RequestSentAt, " + timeAtSender.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] + ")"
+        responseReceivedTimeTuple = "(ResponseReceivedAt, " + responseReceivedTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] + ")"
 
         logging.info(
             "[ResponseLog]"
