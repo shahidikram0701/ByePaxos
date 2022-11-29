@@ -6,10 +6,10 @@ import argparse
 CLIENT_JSON_ATTRIBUTES = ["Memory"]
 SERVER_JSON_ATTRIBUTES = ["PastWindowData", "Memory", "History"]
 
-def parse_server(file_name):
+def parse_server(base_path, output_path, file_name):
     server_logs = list()
 
-    f = open(file_name, "r")
+    f = open(base_path + file_name, "r")
     lines = f.readlines()
     for line in lines:
         
@@ -33,15 +33,15 @@ def parse_server(file_name):
         
     f.close()
 
-    f = open(file_name + ".json", "w")
+    f = open(output_path + file_name.split(".")[0] + ".json", "w")
     f.write(json.dumps(server_logs, indent = 4))
 
     f.close()
 
-def parse_client(file_name):
+def parse_client(base_path, output_path, file_name):
     client_logs = list()
 
-    f = open(file_name, "r")
+    f = open(base_path  + file_name, "r")
     lines = f.readlines()
     for line in lines:
         if "ResponseLog" in line:
@@ -56,7 +56,7 @@ def parse_client(file_name):
 
     f.close()
 
-    f = open(file_name + ".json", "w")
+    f = open(output_path + file_name.split(".")[0] + ".json", "w")
     f.write(json.dumps(client_logs, indent = 4))
 
     f.close()
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file_names", action = "append", help = "file names", required = True)
     parser.add_argument("-p", "--base_path")
     parser.add_argument("-t", "--type", help = "client or server", required = True)
-
+    parser.add_argument("-o", "--output_path", help = "output path")
     args = parser.parse_args()
 
     s = "./data/"
@@ -74,12 +74,16 @@ if __name__ == "__main__":
         s = args.base_path
         if s[-1] != '/':
             s += "/"
-
+    o = "./data_processed/"
+    if args.output_path is not None:
+        o = args.output_path
+        if o[-1] != '/':
+            o += "/"
     for f_name in args.file_names:
         if args.type == "client":
-            parse_client(s + f_name)
+            parse_client(s, o, f_name)
         elif args.type == "server":
-            parse_server(s + f_name)
+            parse_server(s, o, f_name)
         else:
             print("-t can only be \"client\" or \"server\"")
             exit(0)
