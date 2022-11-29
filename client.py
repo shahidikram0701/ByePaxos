@@ -6,6 +6,7 @@ import datetime
 import os
 import time
 import psutil
+import sys
 
 import grpc
 from proto import helloworld_pb2
@@ -36,7 +37,7 @@ def sayHello(stub, seq, replica):
         helloworld_pb2.HelloRequest(
             clientId = selfId, 
             requestId = requestId, 
-            timeAtClient = timeAtClient.strftime('%Y-%m-%d %H:%M:%S'), 
+            timeAtClient = timeAtClient.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], 
             pastWindowData = pickle.dumps(pastWindowData, 0).decode(),
             sequenceNumber = seqNum,
             history = pickle.dumps(history, 0).decode()
@@ -76,8 +77,8 @@ def sayHello(stub, seq, replica):
         serverTimeTuple = "(ServerTime, " + response.serverTime + ")"
         requestIdTuple = "(RequestId, " + requestId + ")"
         rttTuple = "(RTT, " + rtt + ")"
-        requestSentAtTuple = "(RequestSentAt, " + timeAtClient.strftime('%Y-%m-%d %H:%M:%S') + ")"
-        responseReceivedTimeTuple = "(ResponseReceivedAt, " + responseReceivedTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        requestSentAtTuple = "(RequestSentAt, " + timeAtClient.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] + ")"
+        responseReceivedTimeTuple = "(ResponseReceivedAt, " + responseReceivedTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] + ")"
         sequenceNumberTuple = "(SequenceNumber, " + seqNum + ")"  
 
         logging.info(
@@ -128,9 +129,11 @@ if __name__ == '__main__':
     isExist = os.path.exists(path)
     if not isExist:
         os.makedirs(path)
-    port = "50059"
+    port = "50060"
+    logfilename = sys.argv[1]
+    logfilepath = "logs/" + logfilename
     logging.basicConfig(
-        filename="logs/client.log",
+        filename=logfilepath,
         filemode='a',
         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
         datefmt='%H:%M:%S',
@@ -141,7 +144,7 @@ if __name__ == '__main__':
     s.connect(("8.8.8.8", 80))
     selfId = s.getsockname()[0]
     s.close()
-    t_end = time.time() + 60 * 180
+    t_end = time.time() + 60 * 20
     seq = 0
     while time.time() < t_end:
         run(port, seq)

@@ -2,6 +2,7 @@ from concurrent import futures
 import logging
 from rwmutex import RWLock
 import pickle
+import sys
 
 import grpc
 from proto import helloworld_pb2
@@ -31,7 +32,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         serverTime = datetime.now()
 
         sequenceNumberTuple = "(SequenceNumber, " + seqNum + ")"  
-        requestArrivalTimeTuple = "(RequestArrivalTime, " + serverTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        requestArrivalTimeTuple = "(RequestArrivalTime, " + serverTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] + ")"
         clientIdTuple = "(ClientId, " + clientId + ")"
         timeAtClientTuple = "(TimeAtClient, " + timeAtClient + ")"
         pastWindowDataTuple = "(PastWindowData, " + str(pickle.loads(pastWindowData.encode())) + ")"
@@ -81,7 +82,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         logging.info(
             "[ " + requestId + " ]" + 
             "[ RequestArrivalTime ]" + 
-            serverTime.strftime('%Y-%m-%d %H:%M:%S')
+            serverTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         )
         logging.info(
             "[ " + requestId + " ]" + 
@@ -127,7 +128,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
             self.lastRequestArrivalTime["clientId"] = clientId
             self.lastRequestArrivalTime["time"] = serverTime
         
-        return helloworld_pb2.HelloReply(requestId = requestId, serverTime = serverTime.strftime('%Y-%m-%d %H:%M:%S'), requestTime = timeAtClient)
+        return helloworld_pb2.HelloReply(requestId = requestId, serverTime = serverTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], requestTime = timeAtClient)
 
     def SayHelloReplica(self, request, context):
         requestId = request.requestId
@@ -139,7 +140,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         serverTime = datetime.now()
 
         requestIdTuple = "(RequestId, " + requestId + ")"
-        requestArrivalTimeTuple = "(RequestArrivalTime, " + serverTime.strftime('%Y-%m-%d %H:%M:%S') + ")"
+        requestArrivalTimeTuple = "(RequestArrivalTime, " + serverTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] + ")"
         historyTuple = "(History, " + str(pickle.loads(history.encode())) + ")"
         pastWindowDataTuple = "(PastWindowData, " + str(pickle.loads(pastWindowData.encode())) + ")"
         timeAtSenderTuple = "(TimeAtSenderTuple, " + timeAtSender + ")"
@@ -165,11 +166,11 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
 
         return helloworld_pb2.HelloReplyReplica(
             requestId = requestId,
-            timeAtReceiver = serverTime.strftime('%Y-%m-%d %H:%M:%S')
+            timeAtReceiver = serverTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         )
 
 def serve():
-    port = '50059'
+    port = '50060'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port('[::]:' + port)
@@ -184,9 +185,12 @@ if __name__ == '__main__':
     isExist = os.path.exists(path)
     if not isExist:
         os.makedirs(path)
+
+    logfilename = sys.argv[1]
+    logfilepath = "logs/" + logfilename
     
     logging.basicConfig(
-        filename="logs/server.log",
+        filename=logfilepath,
         filemode='a',
         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
         datefmt='%H:%M:%S',
