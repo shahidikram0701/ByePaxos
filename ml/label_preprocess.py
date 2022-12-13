@@ -110,6 +110,12 @@ if __name__ == "__main__":
         normalize_data(i)
         print(i)
 
+
+
+
+
+
+
     
     
     

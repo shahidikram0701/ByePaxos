@@ -289,10 +289,11 @@ if __name__ == "__main__":
                     label_total += torch.argmax(e).item()
                     if torch.argmax(o).item() == torch.argmax(e).item():
                         correct += 1
-                print("Model {} Accuracy: {}".format(key, correct/size))
+               
                 models[key].zero_grad()
                 total_loss = torch.sum(losses) + torch.tensor(label_total/9)
                 total_loss.backward()
+                print("Model {} Accuracy: {} Loss: {}".format(key, correct/size, total_loss))
         print("Done with epoch")
                 
 # processing 1 at a time
