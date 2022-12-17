@@ -2,37 +2,154 @@ import torch
 from torch.utils.data import Dataset
 import torch.nn.functional as F
 import json
-
+import pandas as pd
+import numpy as np
 class TraceDataset(Dataset):
     def __init__(self, buffers):
         self.buffers = buffers
         self.data = [None]*9
+        self.mapping = [None]*9
+        self.reverse_mapping = [None]*9
+        self.output = [None]*9
+        self.min_arrival = 5.05484710e+04
+        self.max_arrival = 6.58189520e+04
+        self.increment = 0.1 / (max_arrival - min_arrival)
+
+        self.SERVER_NAMES = ["amd159", "c220g5-110531", "clnode241", "pc421"]
+
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     def load_data(self):
         for batch in range(1,10):
-            f = open("./label_normalized/server-{}.json".format(batch), "r")
-            data = json.load(f)
-            f.close()
-            self.data[batch-1] = data
-            self.create_tensor(data)
+            #f = open("./label_normalized/server-{}.json".format(batch), "r")
+            #f = open("./true_normalized-{}".format(i), "r")
+            d = torch.tensor(pd.read_csv("./true_normalized-{}".format(i), header = None).to_numpy()).to(self.device)
+            ssize = torch.tensor(pd.read_csv("./true_normalized-{}-ssize".format(i), header = None).to_numpy()).to(self.device)
+            
+            self.data[batch-1], self.output[batch-1] = self.create_tensor(d, ssize)
+            self.mapping[batch-1], self.reverse_mapping[batch-1] = self.create_data_index_match(self.data[batch-1], ssize)
+            
+            #self.create_tensor(data)
+    def create_data_index_match(data, ssize):
+        data_size = ssize[0].item()
+        index_mapping = list()
+        reverse_mapping = list()
+
+        index_mapping.append(torch.tensor(list(range(data_size)), dtype = int).to(self.device))
+        reverse_mapping.append(torch.tensor(list(range(data_size)), dtype = int).to(self.device))
+        
+        index_mapping_dict = dict()
+        for i in range(data_size):
+            index_mapping_dict[self.get_shared_req_id(data[0][i])] = i
+        for i in range(1,4):
+            indexes = torch.zeros(data_size, dtype=int).to(self.device)
+            reverse_indexes = torch.zeros(data_size, dtype=int).to(self.device)
+            for j in range(data_size):
+                indexes[j] = index_mapping[self.get_shared_req_id(data[i][j])]
+                reverse_indexes[index_mapping[self.get_shared_req_id(data[i][j])]] = j
+            index_mapping.append(indexes)
+            reverse_mapping.append(reverse_indexes)
+        return index_mapping, reverse_mapping
+
     
-    def create_tensor(self, data):
-        for key in data:
-            for req in data[key]:
-                for k in req:
-                    if k != "History":
-                        req[k] = torch.tensor(req[k])
-                    else:
-                        for server in req[k]:
-                            req[k][server] = torch.tensor(req[k][server])
+    def create_tensor(self, data, ssize):
+        l = list()
+        o = list()
+        prev  = 0
+        for i in range(4):
+            l.append(data[prev:prev+ssize[i].item()])
+            o.append(torch.zeros(ssize[i].item()).to(self.device))
+            prev += ssize[i].item()buffer_offset = 0
+        return l, o
+    
+            
+
     def get_data(self):
         return self.data    
     def get_min_time(self, data):
         l = list()
-        for key in data:
-            l.append(data[key][0]["RequestArrivalTime"].tolist())
-        return int(min(l) / 5)*5
+        for i in range(4):
+            l.append(data[i][0, 3])
+        return min(l)
     def get_shared_req_id(self, req):
-        return (".".join([str(int(x)) for x in req["ClientId"].tolist()]), int(req["SequenceNumber"].tolist()))
+        return (req[1], req[4])
+    def server_name_to_ind(self, name):
+        return self.SERVER_NAMES.index(name)
+    def compute_new_labels(self, models, batch):
+        data = self.data[batch]
+        mapping = self.mapping[batch]
+        reverse_mapping = self.reverse_mapping[batch]
+
+        buffers = [list([set() for j in range(self.buffers)]) for i in range(4)]
+
+        uncommitted_set = set(list(range(mapping.size()[0])))
+
+        #ground_truth = [dict() for i in range(4)]
+        ground_truth = [list for i in range(4)]
+
+        #req_label = [dict() for i in range(4)]
+
+        start_time = self.get_min_time(data)
+        increment = self.increment
+        max_time = increment + start_time
+
+        model_index = [0 for i in range(4)]
+
+        c = 0
+
+        req_labels = [req_labels.append(models[i](data[i]).argmax(dim = 1)) for i in range(4)]
+            
+        
+        actual_label = [torch.zeros(mapping.size()[0], dtype = int).to(self.device) for i in range(4)]
+        for i in range(4):
+            actual_label[i] = req_labels[i].detach().clone()        
+ 
+        filter_req = [torch.ones(mapping.size()[0], dtype = int).to(self.device) for i in range(4)]
+
+
+        while len(uncommitted_set) != 0:
+            for i in range(4):
+                #change
+                
+                #check if there still is index left
+                #check if time within max time
+                while model_index[i] < data[i].size()[0] and data[i][3].item() < max_time:
+                    buffers[i][req_labels[i][model_index[i]].item()].add(mapping[model_index[i]])
+                    
+                    model_index[i] += 1
+            
+            #find intersect
+            inter = None
+            for i in range(4):
+                if inter is None:
+                    inter =  buffers[i][0]
+                else:
+                    inter = inter.intersection(buffers[i][0])
+            
+            uncommitted_set = uncommitted_set.difference(inter)
+
+            #update
+            for i in range(4):
+                remain = buffers[i][0].difference(inter)
+                for req in remain:
+                    ind = reverse_mapping[i][req]
+                    actual_label[i, ind] += 1
+                    if actual_label[i][ind].item() == self.buffers:
+                        filter_req[i][ind] == 0
+                    else:
+                        buffers[i][1].add(req)
+                buffers[i].pop(0)
+                buffers[i].append(set())
+            
+            max_time += increment
+        fitern_ind = [filter_req[i].nonzero().squeeze(1) for i in range(4)]
+        one_hot = [F.one_hot(torch.index_select(actual_label[i], 0, filter_ind[i]).to(self.device), num_classes = self.buffers) for i in range(4)]
+
+        return one_hot, filter_ind
+
+
+
+
     def compute_labels(self, models_dict, batch):
         #print(self.data)
         data = self.data[batch]
@@ -40,15 +157,17 @@ class TraceDataset(Dataset):
         buffers = dict()
 
         #create buffers initial
-        for server_name in data:
+        for server_name in self.SERVER_NAMES:
             buffers[server_name] = list()
             for i in range(self.buffers):
                 buffers[server_name].append(set())
         buffer_offset = 0
 
         uncommitted_set = set()
+
+
         
-        for d in data[list(models_dict.keys())[0]]:
+        for d in data[self.server_name_to_ind(list(models_dict.keys())[0])]:
             uncommitted_set.add(self.get_shared_req_id(d))
         committed_set = set()
 
