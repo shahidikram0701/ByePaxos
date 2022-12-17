@@ -1,6 +1,15 @@
 # ByePaxos
 
-Research on Learned consensus to achieve total ordering in a replicated state machine without Paxos.
+Research on Learned consensus to achieve total ordering in a Replicated State Machine that eventually eliminates the need for Paxos.
+
+## server.py
+This script sets up grpc servers which mimics replicas for read/write operations. The server recieves requests and logs the various properties of the request which is then used to train the ML models.
+
+## client.py
+This script mimics clients in the system that make concurrent requests to the replica nodes.
+
+## replica_client.py
+This script is used for replicas to ping each other to gauge the network conditions around the replicas. This is there to gather features to see if and how much of the network conditions around the replica affects the total ordering.
 
 ## new_model.py
 This script is used to create the models and train them. The file contains the dataset class, classifier model class, and the train loop. The shifting algorithm is in the dataset class. To the a couple parameters such as BUFFER_SIZE and increment can be changed.
