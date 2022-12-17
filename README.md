@@ -5,6 +5,9 @@ Research on Learned consensus to achieve total ordering in a replicated state ma
 ## new_model.py
 This script is used to create the models and train them. The file contains the dataset class, classifier model class, and the train loop. The shifting algorithm is in the dataset class. To the a couple parameters such as BUFFER_SIZE and increment can be changed.
 
+## model.py
+This is deprecate and shouldn't be used.
+
 ## parser.py
 The parser script takes in a couple command line arguments and then creates the json output representation of the data
 
